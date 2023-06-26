@@ -21,3 +21,8 @@
     transform: translateY(0);
   }
 }
+
+.mealsError {
+  text-align: center;
+  color: red;
+}
