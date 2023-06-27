@@ -1,62 +1,119 @@
 import classes from "./Checkout.module.css";
-import { useRef } from "react";
+import { useReducer } from "react";
 
 const Checkout = (props) => {
-  const nameInputRef = useRef();
-  const cityInputRef = useRef();
-  const streetInputRef = useRef();
-  const homeNumberInputRef = useRef();
-  const postalInputRef = useRef();
-
-  const confirmHandler = (event) => {
-    event.preventDefault();
-    const enteredName = nameInputRef.current.value;
-    const enteredCity = cityInputRef.current.value;
-    const enteredStreet = streetInputRef.current.value;
-    const enteredHomeNumber = homeNumberInputRef.current.value;
-    const enteredPostal = postalInputRef.current.value;
-
-    console.log(
-      enteredCity,
-      enteredHomeNumber,
-      enteredPostal,
-      enteredName,
-      enteredStreet
-    );
+  const actionsEnum = {
+    INPUT: "input",
+    BLUR: "blur",
+    SUBMIT: "submit",
   };
-
   const formData = [
     {
       title: "Your Name",
       label: "name",
       inputType: "text",
-      ref: nameInputRef,
+      errorMsg: "Please fill your name field",
     },
     {
       title: "City",
       label: "city",
       inputType: "text",
-      ref: cityInputRef,
+      errorMsg: "Please fill your city field",
     },
     {
       title: "Street Name",
-      label: "street-name",
+      label: "street",
       inputType: "text",
-      ref: streetInputRef,
+      errorMsg: "Please fill your street field",
     },
     {
       title: "Home Number",
-      label: "home-number",
+      label: "homeNumber",
       inputType: "number",
-      ref: homeNumberInputRef,
+      errorMsg: "Please fill your home number field",
     },
     {
       title: "Postal Code",
-      label: "postal-code",
+      label: "postal",
       inputType: "text",
-      ref: postalInputRef,
+      errorMsg: "Please fill your postal code field",
     },
   ];
+
+  const initialState = {
+    name: "",
+    city: "",
+    street: "",
+    homeNumber: 0,
+    postal: "",
+    errors: {},
+  };
+
+  const validateForm = (stateValues) => {
+    let errors = {};
+    formData.forEach((field) => {
+      if (
+        (typeof stateValues[field.label] === "string" &&
+          (stateValues[field.label].trim() === "" ||
+            stateValues[field.label].trim().length <= 1)) ||
+        (typeof stateValues[field.label] === "number" &&
+          !stateValues[field.label])
+      ) {
+        errors[field.label] = field.errorMsg;
+      } else {
+        errors[field.label] = "";
+      }
+    });
+    return errors;
+  };
+
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case (actionsEnum.INPUT, actionsEnum.BLUR):
+        return {
+          ...state,
+          [action.field]:
+            action.field === "homeNumber"
+              ? parseInt(action.value)
+              : action.value,
+          errors: {
+            ...state.errors,
+            [action.field]: "",
+          },
+        };
+      case actionsEnum.SUBMIT:
+        const errors = validateForm(state);
+        if (Object.keys(errors).length !== 0) {
+          return {
+            ...state,
+            errors,
+          };
+        }
+        return initialState;
+      default:
+        return { ...state };
+    }
+  };
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const confirmHandler = (event) => {
+    event.preventDefault();
+    dispatch({ type: actionsEnum.SUBMIT });
+  };
+
+  const changeHandler = (e) => {
+    const { value, name } = e.target;
+    if (e.type === "blur") {
+      dispatch({
+        type: actionsEnum.BLUR,
+        field: name,
+        value,
+      });
+    } else {
+      dispatch({ type: actionsEnum.INPUT, field: name, value });
+    }
+  };
 
   return (
     <form className={classes.form}>
@@ -64,7 +121,20 @@ const Checkout = (props) => {
         return (
           <div className={classes.control} key={index}>
             <label htmlFor={data.label}>{data.title}</label>
-            <input type={data.inputType} id={data.label} ref={data.ref} />
+            <input
+              name={data.label}
+              onChange={changeHandler}
+              onBlur={changeHandler}
+              placeholder={data.title}
+              min={1}
+              type={data.inputType}
+              id={data.label}
+              ref={data.ref}
+              value={state.value}
+            />
+            {state.errors[data.label] && (
+              <p className={classes.invalid}>{data.errorMsg}</p>
+            )}
           </div>
         );
       })}
