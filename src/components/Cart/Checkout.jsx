@@ -83,12 +83,15 @@ const Checkout = (props) => {
         };
       case actionsEnum.SUBMIT:
         const errors = validateForm(state);
-        if (Object.keys(errors).length !== 0) {
+        if (
+          Object.values(errors).filter((value) => value !== "").length !== 0
+        ) {
           return {
             ...state,
             errors,
           };
         }
+        props.onConfirm({ ...state });
         return initialState;
       default:
         return { ...state };

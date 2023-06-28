@@ -5,8 +5,15 @@ const defaultCartState = {
   items: [],
   totalAmount: 0,
 };
+
+const actionsEnum = {
+  ADD_CART_ITEM: "ADD_CART_ITEM",
+  REMOVE_CART_ITEM: "REMOVE_CART_ITEM",
+  CLEAR_CART_ITEMS: "CLEAR_CART_ITEMS",
+};
+
 const cartReducer = (state, action) => {
-  if (action.type === "ADD_CART_ITEM") {
+  if (action.type === actionsEnum.ADD_CART_ITEM) {
     const updatedTotalAmount =
       state.totalAmount + action.item.price * action.item.amount;
 
@@ -34,7 +41,7 @@ const cartReducer = (state, action) => {
     };
   }
 
-  if (action.type === "REMOVE_CART_ITEM") {
+  if (action.type === actionsEnum.REMOVE_CART_ITEM) {
     const existItemIndex = state.items.findIndex(
       (item) => item.id === action.id
     );
@@ -57,6 +64,10 @@ const cartReducer = (state, action) => {
       totalAmount: updatedTotalAmount,
     };
   }
+
+  if (action.type === actionsEnum.CLEAR_CART_ITEMS) {
+    return defaultCartState;
+  }
   return defaultCartState;
 };
 
@@ -67,11 +78,15 @@ const CartProvider = ({ children }) => {
   );
 
   const addItemToCartHandler = (item) => {
-    dispatchCartAction({ type: "ADD_CART_ITEM", item });
+    dispatchCartAction({ type: actionsEnum.ADD_CART_ITEM, item });
   };
 
   const removeItemFromCartHandler = (id) => {
-    dispatchCartAction({ type: "REMOVE_CART_ITEM", id });
+    dispatchCartAction({ type: actionsEnum.REMOVE_CART_ITEM, id });
+  };
+
+  const clearCartItemsHandler = () => {
+    dispatchCartAction({ type: actionsEnum.CLEAR_CART_ITEMS });
   };
 
   const cartContext = {
@@ -79,6 +94,7 @@ const CartProvider = ({ children }) => {
     totalAmount: cartState.totalAmount,
     addItem: addItemToCartHandler,
     removeItem: removeItemFromCartHandler,
+    clearCart: clearCartItemsHandler,
   };
 
   return (
